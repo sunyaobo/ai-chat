@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://39.96.63.42/review/api/:path*"
+      "destination": "https://39.96.63.42/review/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "http://39.96.63.42/review/uploads/:path*"
+      "destination": "https://39.96.63.42/review/uploads/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
