@@ -8,7 +8,7 @@ export default defineConfig({
     host: '127.0.0.1',
     // 反向代理：把 /api 转发到 FastAPI 后端，避免跨域
     proxy: {
-      '/api': { target: 'http://127.0.0.1:8001', changeOrigin: true }
+      '/api': { target: 'http://39.96.63.42/qa', changeOrigin: true }
     }
   }
 })
