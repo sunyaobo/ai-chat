@@ -1,0 +1,149 @@
+# ============================================================
+#  四合一 AI 应用编排：MySQL + 4 个 FastAPI 后端 + Nginx 反代
+#  部署：docker compose up -d --build
+# ============================================================
+services:
+
+  # ---------- 共享 MySQL ----------
+  mysql:
+    image: mysql:8.0
+    container_name: ai-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme123}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-changeme123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------- 1) chat_app ----------
+  chat-app:
+    build: ./chat_app/backend
+    container_name: ai-chat-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-changeme123}
+      DB_NAME: chat_app
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8000"
+      CORS_ORIGINS: "*"
+    volumes:
+      - chat_uploads:/app/uploads
+    expose:
+      - "8000"
+
+  # ---------- 2) qa_bot ----------
+  qa-bot:
+    build: ./qa_bot/backend
+    container_name: ai-qa-bot
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-changeme123}
+      DB_NAME: qa_bot
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      LLM_BASE_URL: https://dashscope.aliyuncs.com/compatible-mode/v1
+      LLM_MODEL: qwen-max
+      DOC_PATH: /app/data/银行个金客户经理考核办法.docx
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8001"
+      CORS_ORIGINS: "*"
+    volumes:
+      - qa_chroma:/app/chroma_db_qa
+      # 挂载 RAG 文档（部署时把 .docx 放到 qa_bot/backend/data/ 目录）
+      - ./qa_bot/backend/data:/app/data:ro
+    expose:
+      - "8001"
+
+  # ---------- 3) code_review_bot ----------
+  code-review-bot:
+    build: ./code_review_bot/backend
+    container_name: ai-code-review
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-changeme123}
+      DB_NAME: code_review
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8002"
+      CORS_ORIGINS: "*"
+    volumes:
+      - review_uploads:/app/uploads
+    expose:
+      - "8002"
+
+  # ---------- 4) enterprise_ai ----------
+  enterprise-ai:
+    build: ./enterprise_ai/backend
+    container_name: ai-enterprise
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-changeme123}
+      DB_NAME: enterprise_ai
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      BACKEND_HOST: "0.0.0.0"
+      BACKEND_PORT: "8003"
+      CORS_ORIGINS: "*"
+    volumes:
+      - enterprise_uploads:/app/uploads_docs
+      - enterprise_chroma:/app/chroma_store
+      - enterprise_logs:/app/logs
+    expose:
+      - "8003"
+
+  # ---------- Nginx 反向代理 ----------
+  nginx:
+    image: nginx:alpine
+    container_name: ai-nginx
+    restart: unless-stopped
+    depends_on:
+      - chat-app
+      - qa-bot
+      - code-review-bot
+      - enterprise-ai
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  mysql_data:
+  chat_uploads:
+  qa_chroma:
+  review_uploads:
+  enterprise_uploads:
+  enterprise_chroma:
+  enterprise_logs:

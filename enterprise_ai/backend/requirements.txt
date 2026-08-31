@@ -1,0 +1,26 @@
+# ===== Web 框架 =====
+fastapi>=0.110
+uvicorn[standard]>=0.27
+sse-starlette>=2.0
+python-multipart>=0.0.9
+
+# ===== 数据库 =====
+sqlalchemy>=2.0
+pymysql>=1.1
+pydantic>=2.5
+pydantic-settings>=2.0
+
+# ===== LLM / Embedding / 向量库 =====
+openai>=1.30
+dashscope>=1.20
+chromadb>=0.5
+
+# ===== 文档解析 =====
+pypdf>=4.0
+python-docx>=1.1
+
+# ===== Gradio Demo（技术栈要求的快速 AI 网页）=====
+gradio>=4.36
+
+# ===== Docker 镜像内同样适用 =====
+requests>=2.31

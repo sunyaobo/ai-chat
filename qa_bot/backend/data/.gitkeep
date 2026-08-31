@@ -1,0 +1,2 @@
+# 部署时把 RAG 文档（银行个金客户经理考核办法.docx）放到此目录
+# docker-compose 会把此目录挂载到容器 /app/data
