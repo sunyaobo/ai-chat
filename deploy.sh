@@ -67,8 +67,7 @@ fi
 # 5. 分批构建（避免 OOM）
 echo ""
 echo "[1/3] 构建镜像（分批构建以避免内存不足）..."
-for dir in chat_app/backend qa_bot/backend code_review_bot/backend enterprise_ai/backend; do
-  name=$(basename $(dirname $(dirname $dir)))
+for name in chat-app qa-bot code-review-bot enterprise-ai; do
   echo "  构建 $name ..."
   docker compose build "$name" || { echo "[ERROR] $name 构建失败"; exit 1; }
 done
