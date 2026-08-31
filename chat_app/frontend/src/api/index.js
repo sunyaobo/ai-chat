@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-// API 基址：相对路径
+// API 基址：空字符串，依赖代理处理
 // 本地 dev: vite proxy 转发 /api → http://39.96.63.42/chat
-// Vercel  : vercel.json rewrites 代理 /api/* → http://39.96.63.42/chat/api/*
-const API_BASE = '/api'
+// Vercel  : vercel.json rewrites 代理 /api/* → https://39.96.63.42/chat/api/*
+const API_BASE = ''
 
 const http = axios.create({
   baseURL: API_BASE,
