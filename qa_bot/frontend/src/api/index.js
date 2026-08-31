@@ -1,8 +1,12 @@
 import axios from 'axios'
 
-// vite proxy 已把 /api 转发到后端，前端用相对路径即可
+// 运行时 API 基址：优先读 VITE_API_BASE（Vercel 构建时注入），否则回退到公网后端
+// 本地 dev: vite proxy 转发到 http://39.96.63.42/qa  →  VITE_API_BASE 留空即可
+// Vercel  : 必须设 VITE_API_BASE=http://39.96.63.42/qa  →  否则 Vite 静态替换为空
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://39.96.63.42/qa'
+
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || '',
+  baseURL: API_BASE,
   timeout: 600000,
 })
 
@@ -33,7 +37,7 @@ export function askStream(question, onEvent) {
   const promise = (async () => {
     let resp
     try {
-      resp = await fetch('/api/qa/stream', {
+      resp = await fetch(API_BASE + '/api/qa/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question, stream: true }),

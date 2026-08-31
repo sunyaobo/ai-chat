@@ -1,8 +1,12 @@
 import axios from 'axios'
 
-// vite proxy 已把 /api 与 /uploads 转发到后端，前端用相对路径即可
+// 运行时 API 基址：优先读 VITE_API_BASE（Vercel 构建时注入），否则回退到公网后端
+// 本地 dev: vite proxy 转发到 http://39.96.63.42/chat  →  VITE_API_BASE 留空即可
+// Vercel  : 必须设 VITE_API_BASE=http://39.96.63.42/chat  →  否则 Vite 静态替换为空
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://39.96.63.42/chat'
+
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || '',
+  baseURL: API_BASE,
   timeout: 600000,
 })
 
@@ -39,7 +43,7 @@ export function chatStream(payload, onEvent) {
   const promise = (async () => {
     let resp
     try {
-      resp = await fetch('/api/chat/stream', {
+      resp = await fetch(API_BASE + '/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
